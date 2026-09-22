@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   release:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 45
     permissions:
       contents: write
@@ -124,7 +124,7 @@ jobs:
 
   validate:
     needs: release
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5

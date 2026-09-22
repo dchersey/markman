@@ -1,15 +1,13 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-3.0-only
-# Build all standard and Retina macOS icon sizes from the approved artwork.
+# Compile the native icon and its legacy fallback using Xcode 26 or newer.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-ICONSET="$ROOT/.build/Markman.iconset"
-mkdir -p "$ICONSET"
-for size in 16 32 128 256 512; do
-  sips -z "$size" "$size" "$ROOT/assets/Markman.png" \
-    --out "$ICONSET/icon_${size}x${size}.png" > /dev/null
-  retina=$((size * 2))
-  sips -z "$retina" "$retina" "$ROOT/assets/Markman.png" \
-    --out "$ICONSET/icon_${size}x${size}@2x.png" > /dev/null
-done
-iconutil -c icns "$ICONSET" -o "$ROOT/.build/Markman.icns"
+DOCUMENT="$ROOT/.build/Markman.icon"
+OUTPUT="$ROOT/.build/IconResources"
+mkdir -p "$DOCUMENT/Assets" "$OUTPUT"
+cp "$ROOT/assets/icon-composer.json" "$DOCUMENT/icon.json"
+sips -z 1024 1024 "$ROOT/assets/Markman.png" --out "$DOCUMENT/Assets/Artwork.png" > /dev/null
+xcrun actool "$DOCUMENT" --compile "$OUTPUT" --platform macosx \
+  --minimum-deployment-target 13.0 --app-icon Markman \
+  --output-partial-info-plist "$ROOT/.build/icon-info.plist" > /dev/null

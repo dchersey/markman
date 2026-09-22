@@ -29,7 +29,9 @@ Intel Macs can build from source with the instructions below.
 
 ## Build from source
 
-Requires macOS 13+ and the Swift 6 toolchain (Xcode or Command Line Tools).
+Running Markman requires macOS 13+. Building requires Xcode 26 or newer
+(including its Icon Composer compiler) and its Swift toolchain. Select that
+Xcode installation with `xcode-select` before building.
 
 ```sh
 git clone https://github.com/dchersey/markman.git

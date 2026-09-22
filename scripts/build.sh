@@ -3,7 +3,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-VERSION="${MARKMAN_VERSION:-0.1.1}"
+VERSION="${MARKMAN_VERSION:-0.1.2}"
 if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   printf 'Invalid MARKMAN_VERSION: use MAJOR.MINOR.PATCH\n' >&2
   exit 1
@@ -18,7 +18,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/markman" "$APP/Contents/MacOS/markman"
 cp -R Sources/Markman/Resources "$APP/Contents/Resources/"
 ./scripts/build-icon.sh
-cp .build/Markman.icns "$APP/Contents/Resources/Markman.icns"
+cp .build/IconResources/Markman.icns .build/IconResources/Assets.car "$APP/Contents/Resources/"
 cp LICENSE THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -28,6 +28,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleIdentifier</key><string>org.hersey.markman</string>
 <key>CFBundleName</key><string>Markman</string>
 <key>CFBundleIconFile</key><string>Markman.icns</string>
+<key>CFBundleIconName</key><string>Markman</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>__VERSION__</string>
 <key>CFBundleVersion</key><string>__VERSION__</string>

@@ -1,7 +1,7 @@
 # Signing and releasing Markman
 
 The release workflow follows Air Defense's Developer ID + hardened runtime +
-Apple notarization process. It runs on GitHub's `macos-15` Apple Silicon runner.
+Apple notarization process. It runs on GitHub's `macos-26` Apple Silicon runner.
 CI on `main` and pull requests builds and tests without signing secrets.
 
 ## Configure GitHub Actions secrets
@@ -39,7 +39,7 @@ git push origin v0.1.0
 
 Choose a new, unused version for subsequent releases. Versions must be exactly
 `vMAJOR.MINOR.PATCH`. The tag sets both app bundle version fields; local builds
-default to `0.1.1` and can override that with `MARKMAN_VERSION=1.2.3`.
+default to `0.1.2` and can override that with `MARKMAN_VERSION=1.2.3`.
 The stable app bundle identifier is `org.hersey.markman`.
 
 The workflow:

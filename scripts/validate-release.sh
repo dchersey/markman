@@ -35,6 +35,9 @@ PLIST="$APP/Contents/Info.plist"
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")" == "$VERSION" ]]
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$PLIST")" == Markman.icns ]]
 [[ -s "$APP/Contents/Resources/Markman.icns" ]]
+[[ -s "$APP/Contents/Resources/Assets.car" ]]
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$PLIST")" == Markman ]]
+CLANG_MODULE_CACHE_PATH="$ROOT/.build/clang-cache" swift "$ROOT/scripts/check-icon.swift" "$APP"
 [[ "$(lipo -archs "$APP/Contents/MacOS/markman")" == arm64 ]]
 codesign --verify --deep --strict --verbose=2 "$APP"
 SIGNATURE="$(codesign -dvvv "$APP" 2>&1)"
@@ -51,7 +54,7 @@ done
 # The explicit source asset must contain the app, build scripts, license, and
 # editable upstream dependency sources, not only the generated JavaScript.
 tar -tzf "$ASSETS/markman-$VERSION-source.tar.gz" > "$TEMP_DIR/source-files"
-for entry in LICENSE Package.swift scripts/build.sh scripts/build-icon.sh assets/Markman.png Sources/Markman/main.swift vendor/marked-18.0.13/src/marked.ts vendor/DOMPurify-3.2.7/src/purify.ts; do
+for entry in LICENSE Package.swift scripts/build.sh scripts/build-icon.sh scripts/check-icon.swift assets/Markman.png assets/icon-composer.json Sources/Markman/main.swift vendor/marked-18.0.13/src/marked.ts vendor/DOMPurify-3.2.7/src/purify.ts; do
   grep -Fx "markman-$VERSION/$entry" "$TEMP_DIR/source-files" > /dev/null
 done
 printf 'Validated %s: signed, notarized, stapled, Gatekeeper-accepted, with matching source and launcher.\n' "$TAG"
