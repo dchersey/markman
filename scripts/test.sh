@@ -6,8 +6,8 @@ cd "$ROOT"
 ./scripts/build.sh
 BIN="$ROOT/.build/Markman.app/Contents/MacOS/markman"
 PLIST="$ROOT/.build/Markman.app/Contents/Info.plist"
-[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")" == "${MARKMAN_VERSION:-0.1.2}" ]]
-[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")" == "${MARKMAN_VERSION:-0.1.2}" ]]
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")" == "${MARKMAN_VERSION:-0.1.3}" ]]
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")" == "${MARKMAN_VERSION:-0.1.3}" ]]
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$PLIST")" == org.hersey.markman ]]
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$PLIST")" == Markman.icns ]]
 [[ -s "$ROOT/.build/Markman.app/Contents/Resources/Markman.icns" ]]
@@ -31,6 +31,9 @@ CLANG_MODULE_CACHE_PATH="$ROOT/.build/clang-cache" swift scripts/check-icon.swif
 "$LAUNCHER_TEST/Release Test/bin/markman" --help
 MARKMAN_APP="$ROOT/.build/Markman.app" "$LAUNCHER_TEST/Release Test/bin/markman" --help
 if MARKMAN_APP="$LAUNCHER_TEST/missing.app" "$LAUNCHER_TEST/Release Test/bin/markman" --help 2>/dev/null; then exit 1; fi
+CLANG_MODULE_CACHE_PATH="$ROOT/.build/clang-cache" swiftc -parse-as-library   Sources/Markman/DocumentWatcher.swift tests/watcher/main.swift -o .build/test-watcher
+.build/test-watcher
+"$BIN" --reload-test
 "$BIN" --smoke-test --theme light tests/fixtures/rendering.md
 "$BIN" --smoke-test --theme dark tests/fixtures/rendering.md
 printf 'All checks passed. Screenshot: /tmp/markman-smoke.png\n'

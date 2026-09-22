@@ -58,7 +58,8 @@ The packaged app is `.build/Markman.app`. It can also be opened in Finder or cop
 - Table cells wrap long text and code. Alternating rows have subtle shading. Tables too wide for a small window scroll within the document instead of clipping columns.
 - GitHub-style tables, task lists, fenced code, blockquotes, links, and images render offline. Remote images still need network access.
 - Relative local images and links to other Markdown files work. Web links open in your browser.
-- **⌘O** opens files, **⌘R** reloads after edits, **⌘W** closes the window.
+- Open documents reload automatically about a second after a save, preserving scroll position, zoom, and theme. Atomic saves and deleting/recreating the file are supported; an unavailable file keeps its last readable preview.
+- **⌘O** opens files, **⌘R** forces a reload, **⌘W** closes the window.
 - **⌘=** zooms in, **⌘-** zooms out, **⌘0** resets zoom.
 - Choose **View → System / Light / Dark** to change appearance. The default follows macOS.
 
@@ -96,7 +97,7 @@ You can run the same layout checks on a document containing a table with at leas
 
 ## Scope and dependencies
 
-The first iteration is a reader: reload is manual; search, editing, syntax coloring, Mermaid, and math rendering are not implemented.
+The first iteration is a reader: search, editing, syntax coloring, Mermaid, and math rendering are not implemented.
 
 Rendering uses bundled [Marked 18.0.13](https://github.com/markedjs/marked) and [DOMPurify 3.2.7](https://github.com/cure53/DOMPurify), with their licenses included beside the vendored code. Document HTML is sanitized and document scripts are blocked. There are no runtime CDN or package-manager requests. The app uses native AppKit and WebKit, not Electron.
 

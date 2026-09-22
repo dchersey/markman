@@ -3,7 +3,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-VERSION="${MARKMAN_VERSION:-0.1.2}"
+VERSION="${MARKMAN_VERSION:-0.1.3}"
 if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   printf 'Invalid MARKMAN_VERSION: use MAJOR.MINOR.PATCH\n' >&2
   exit 1

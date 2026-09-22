@@ -20,5 +20,6 @@ window.renderMarkdown = (markdown) => {
     while (document.getElementById(id)) id = `${base}-${n++}`;
     heading.id = id;
   });
-  window.scrollTo(0,y);
+  // Avoid subpixel scroll rounding on every refresh when the position is unchanged.
+  if (window.scrollY !== y) window.scrollTo(0,y);
 };

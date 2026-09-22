@@ -9,6 +9,7 @@ struct Options {
     var css: String = ""
     var smokeTest = false
     var validateOnly = false
+    var reloadTest = false
     static func parse() throws -> Options {
         var result = Options()
         var args = Array(CommandLine.arguments.dropFirst())
@@ -25,6 +26,7 @@ struct Options {
                 """)
                 exit(0)
             }
+            if !positional && arg == "--reload-test" { result.reloadTest = true; continue }
             if !positional && arg == "--validate-only" { result.validateOnly = true; continue }
             if !positional && arg == "--smoke-test" { result.smokeTest = true; continue }
             if !positional && ["--theme", "--css"].contains(arg) {
@@ -75,13 +77,14 @@ final class LocalImageHandler: NSObject, WKURLSchemeHandler {
 }
 
 @MainActor
-final class DocumentWindow: NSWindowController, WKNavigationDelegate {
+final class DocumentWindow: NSWindowController, WKNavigationDelegate, NSWindowDelegate {
     let web: WKWebView
     let file: URL
     let options: Options
     var markdown: String
     var ready = false
     var smokeStep = 0
+    var watcher: DocumentWatcher?
     init(file: URL, options: Options) throws {
         self.file = file
         self.options = options
@@ -101,6 +104,12 @@ final class DocumentWindow: NSWindowController, WKNavigationDelegate {
         window.center()
         window.isReleasedWhenClosed = false
         super.init(window:window)
+        window.delegate = self
+        watcher = DocumentWatcher(file:file, initialText:markdown) { [weak self] text in
+            guard let self, self.markdown != text else { return }
+            self.markdown = text
+            if self.ready { self.render() }
+        }
         web.navigationDelegate = self
         web.allowsBackForwardNavigationGestures = false
         web.allowsMagnification = true
@@ -117,6 +126,11 @@ final class DocumentWindow: NSWindowController, WKNavigationDelegate {
         web.loadHTMLString(html, baseURL:base.url)
     }
     required init?(coder:NSCoder) { fatalError() }
+    func windowWillClose(_ notification: Notification) {
+        watcher?.stop()
+        watcher = nil
+        (NSApp.delegate as? AppDelegate)?.documents.removeAll { $0 === self }
+    }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         guard !ready else { return }
         ready = true
@@ -202,6 +216,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     init(options: Options) { self.options = options }
     func applicationDidFinishLaunching(_ notification: Notification) {
         buildMenu()
+        if options.reloadTest {
+            Task { @MainActor in
+                do { try await checkAutomaticReload(); exit(0) }
+                catch { print("Automatic reload check failed: \(error)"); exit(1) }
+            }
+            return
+        }
         let files = options.files.isEmpty ? pendingFiles : options.files
         launched = true
         if files.isEmpty { chooseFile() } else { files.forEach(open) }

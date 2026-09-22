@@ -39,7 +39,7 @@ git push origin v0.1.0
 
 Choose a new, unused version for subsequent releases. Versions must be exactly
 `vMAJOR.MINOR.PATCH`. The tag sets both app bundle version fields; local builds
-default to `0.1.2` and can override that with `MARKMAN_VERSION=1.2.3`.
+default to `0.1.3` and can override that with `MARKMAN_VERSION=1.2.3`.
 The stable app bundle identifier is `org.hersey.markman`.
 
 The workflow:
