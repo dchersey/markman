@@ -57,7 +57,7 @@ for packaging. A local Arch package can be built from this checkout:
 ```sh
 cd packaging/arch
 makepkg
-sudo pacman -U markman-*.pkg.tar.zst
+sudo pacman -U markman-*.pkg.tar.*
 ```
 
 This PKGBUILD packages the current checkout and is a prototype recipe, not an
