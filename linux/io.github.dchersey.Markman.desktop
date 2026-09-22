@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Markman
+Comment=Read Markdown documents
+Exec=markman %F
+Icon=io.github.dchersey.Markman
+Terminal=false
+Categories=Office;Viewer;
+MimeType=text/markdown;text/x-markdown;
+StartupNotify=true
+StartupWMClass=io.github.dchersey.Markman

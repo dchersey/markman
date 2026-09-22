@@ -2,6 +2,12 @@
 # SPDX-License-Identifier: GPL-3.0-only
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ "$(uname -s)" == Linux ]]; then
+  if [[ -f "$ROOT/linux/markman.py" ]]; then
+    exec /usr/bin/python3 "$ROOT/linux/markman.py" "$@"
+  fi
+  exec /usr/bin/python3 "$ROOT/share/markman/linux/markman.py" "$@"
+fi
 if [[ -n "${MARKMAN_APP:-}" ]]; then
   APP="$MARKMAN_APP"
 elif [[ -f "$ROOT/Package.swift" && -x "$ROOT/scripts/build.sh" ]]; then

@@ -21,8 +21,7 @@ else
   fi
   ASSETS="$TEMP_DIR/assets"
   mkdir -p "$ASSETS"
-  gh release download "$TAG" --repo "$REPO" --dir "$ASSETS" \
-    --pattern Markman-macos-arm64.zip --pattern "markman-${TAG#v}-source.tar.gz" --pattern SHA256SUMS
+  gh release download "$TAG" --repo "$REPO" --dir "$ASSETS"
 fi
 [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Expected vMAJOR.MINOR.PATCH' >&2; exit 2; }
 VERSION="${TAG#v}"

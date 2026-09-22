@@ -2,9 +2,82 @@
 
 <img src="assets/Markman.png" width="128" alt="Markman: an ivory M wearing a blue baseball cap, beside a blue down arrow">
 
-A small macOS Markdown viewer. Open a file from your terminal in a native Swift/AppKit window, with the entire window available for reading. No editor, print-width column, or account.
+A small Markdown viewer for macOS, with a Linux prototype. Open a file from your terminal in a native window, with the entire window available for reading. No editor, print-width column, or account.
 
-## Install a release
+## Linux prototype (Arch / Omarchy)
+
+Download **Markman-linux.tar.gz** from [Releases](https://github.com/dchersey/markman/releases/latest),
+extract it, and run the included installer:
+
+```sh
+sudo pacman -S --needed gtk4 python-gobject webkitgtk-6.0
+tar -xzf Markman-linux.tar.gz
+cd Markman-linux
+./scripts/install-linux.sh
+~/.local/bin/markman examples/wide-table.md
+```
+
+The download includes the application and corresponding source. No compilation
+is needed. The installer adds a launcher and “Open With” entry for your user.
+
+The Linux frontend uses Python, GTK4 and WebKitGTK 6.0. It shares the Mac app's
+bundled renderer, styles and sanitization; no JavaScript package installation is
+needed. On Arch:
+
+```sh
+sudo pacman -S --needed gtk4 python-gobject webkitgtk-6.0
+./bin/markman examples/wide-table.md
+./bin/markman --theme dark tests/fixtures/rendering.md
+./bin/markman --css /path/to/theme.css document.md
+```
+
+With no file, Markman shows a file picker. Multiple paths open separate windows.
+The Linux command stays in the foreground; append `&` to keep using the terminal.
+Relative images, heading links and links to other Markdown files work. Web and
+email links open in the system's default application. Files reload after saves,
+including atomic replacement and deletion/recreation, preserving scroll, zoom
+and appearance. Missing or temporarily unreadable files keep their last preview.
+
+Use **Ctrl+O** to open, **Ctrl+R** to reload, **Ctrl+W** to close,
+**Ctrl++ / Ctrl+-** to zoom and **Ctrl+0** to reset. The window menu offers
+System / Light / Dark appearance. System follows the appearance WebKit receives
+from the desktop; it does not import an Omarchy theme's custom palette.
+
+Install the command, icon, application launcher and “Open With” entry for your user:
+
+```sh
+./scripts/install-linux.sh
+```
+
+The default prefix is `~/.local`; put `~/.local/bin` on your PATH to run `markman`
+anywhere. Re-run the installer after changing the checkout. It does not change
+the default application for Markdown files. `PREFIX` and `DESTDIR` are supported
+for packaging. A local Arch package can be built from this checkout:
+
+```sh
+cd packaging/arch
+makepkg
+sudo pacman -U markman-*.pkg.tar.zst
+```
+
+This PKGBUILD packages the current checkout and is a prototype recipe, not an
+AUR source package. GTK4 uses the available Wayland display on Omarchy; no
+Hyprland configuration is required.
+
+For automated Linux checks:
+
+```sh
+sudo pacman -S --needed xorg-server-xvfb desktop-file-utils
+./scripts/test-linux.sh
+```
+
+The test uses a temporary X display and the real WebKit engine to check light
+and dark rendering at three widths, sanitization, local images, heading and
+Markdown links, automatic reload, and scroll/zoom/theme retention. Linux CI runs
+the same test. Native Wayland behavior and the desktop file picker also need
+interactive testing on the target desktop.
+
+## Install a macOS release
 
 The release workflow produces an Apple Silicon build for macOS 13 or newer,
 signed with Developer ID and notarized by Apple. Download
@@ -27,7 +100,7 @@ The launcher finds the app in Applications, or beside its `bin` folder before
 installation. Set `MARKMAN_APP=/path/to/Markman.app` to use another location.
 Intel Macs can build from source with the instructions below.
 
-## Build from source
+## Build the macOS app from source
 
 Running Markman requires macOS 13+. Building requires Xcode 26 or newer
 (including its Icon Composer compiler) and its Swift toolchain. Select that

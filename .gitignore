@@ -3,3 +3,7 @@
 node_modules/
 vendor/*/dist/
 vendor/*/lib/
+__pycache__/
+*.pkg.tar.zst
+packaging/arch/pkg/
+packaging/arch/src/

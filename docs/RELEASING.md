@@ -3,6 +3,8 @@
 The release workflow follows Air Defense's Developer ID + hardened runtime +
 Apple notarization process. It runs on GitHub's `macos-26` Apple Silicon runner.
 CI on `main` and pull requests builds and tests without signing secrets.
+Linux is packaged and tested on Ubuntu with GTK4 and WebKitGTK 6.0 before the
+Mac release job starts. Both downloads are published in one release.
 
 ## Configure GitHub Actions secrets
 
@@ -27,6 +29,9 @@ certificate even if the build fails. Never commit certificates, private keys,
 or passwords to this repository.
 
 ## Publish
+
+Update `docs/RELEASE_NOTES.md` and `packaging/arch/PKGBUILD` for the new release.
+The release notes include installation instructions for both platforms.
 
 After the main-branch CI passes and the secrets are configured:
 
@@ -63,11 +68,15 @@ fix, use a new version tag rather than moving a published tag.
 ## Release assets
 
 - `Markman-macos-arm64.zip`: `Markman.app`, `bin/markman`, and license notices.
+- `Markman-linux.tar.gz`: the Python/GTK4 app, shared renderer, user installer,
+  desktop entry, licenses and matching editable sources. Extract and run
+  `./scripts/install-linux.sh`; GTK4, Python GObject and WebKitGTK 6.0 are
+  distribution dependencies. No compilation is required.
 - `markman-VERSION-source.tar.gz`: matching source, dependency sources, and
   build scripts, provided alongside the binary for GPLv3 compliance.
-- `SHA256SUMS`: checksums for both archives.
+- `SHA256SUMS`: checksums for all three archives.
 
-The first workflow supports Apple Silicon. Source builds also support Intel;
+The macOS workflow supports Apple Silicon. Source builds also support Intel;
 there is no Intel prebuilt release job yet. The app uses WebKit's separate
 rendering process, so no JIT or unsigned-executable-memory entitlement is added
 to the app.
@@ -84,3 +93,11 @@ On macOS with GitHub CLI and Xcode/Command Line Tools installed:
 Validation extracts into a temporary folder, never installs or replaces an
 application, and removes downloaded files afterward. CI also uses its
 `--local ASSET_DIRECTORY TAG` form before publication.
+
+On Linux, `./scripts/package-linux.sh` archives the current **committed HEAD**
+and validates installation and rendering from the packaged files. To check a
+download, run `./scripts/validate-linux-release.sh Markman-linux.tar.gz`.
+This installs only into a temporary prefix, runs the WebKit tests with Xvfb,
+and removes the temporary installation afterward. It requires the same test
+dependencies as `scripts/test-linux.sh`. A fresh CI job also downloads the
+published assets, checks every checksum, and repeats Linux validation.

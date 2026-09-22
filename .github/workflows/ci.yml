@@ -9,6 +9,15 @@ permissions:
   contents: read
 
 jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install GTK and WebKitGTK
+        run: sudo apt-get update && sudo apt-get install -y python3-gi gir1.2-gtk-4.0 gir1.2-webkit-6.0 xvfb xauth desktop-file-utils
+      - name: Test Linux viewer
+        run: dbus-run-session -- bash scripts/test-linux.sh
   test:
     runs-on: macos-26
     timeout-minutes: 15

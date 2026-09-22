@@ -13,7 +13,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install GTK and WebKitGTK
+        run: sudo apt-get update && sudo apt-get install -y python3-gi gir1.2-gtk-4.0 gir1.2-webkit-6.0 xvfb xauth desktop-file-utils
+      - name: Package and test Linux download
+        run: dbus-run-session -- ./scripts/package-linux.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-release
+          path: .build/release-assets/Markman-linux.tar.gz
+          if-no-files-found: error
+
   release:
+    needs: linux
     runs-on: macos-26
     timeout-minutes: 45
     permissions:
@@ -103,8 +119,16 @@ jobs:
           ditto -c -k .build/release-stage .build/release-assets/Markman-macos-arm64.zip
           git archive --format=tar.gz --prefix="markman-${TAG#v}/" \
             -o ".build/release-assets/markman-${TAG#v}-source.tar.gz" HEAD
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-release
+          path: .build/release-assets
+
+      - name: Checksum all downloads
+        run: |
           cd .build/release-assets
-          shasum -a 256 Markman-macos-arm64.zip "markman-${TAG#v}-source.tar.gz" > SHA256SUMS
+          shasum -a 256 Markman-macos-arm64.zip Markman-linux.tar.gz "markman-${TAG#v}-source.tar.gz" > SHA256SUMS
 
       - name: Validate packaged release before publishing
         run: ./scripts/validate-release.sh --local .build/release-assets "$TAG"
@@ -114,7 +138,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$TAG" .build/release-assets/* \
-            --verify-tag --title "Markman $TAG" --generate-notes
+            --verify-tag --title "Markman $TAG" --notes-file docs/RELEASE_NOTES.md --generate-notes
 
       - name: Remove signing material
         if: always()
@@ -133,3 +157,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: ./scripts/validate-release.sh "$TAG"
+
+  validate-linux:
+    needs: release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install GTK and WebKitGTK
+        run: sudo apt-get update && sudo apt-get install -y python3-gi gir1.2-gtk-4.0 gir1.2-webkit-6.0 xvfb xauth desktop-file-utils
+      - name: Download and verify published assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p .build/published
+          gh release download "$TAG" --dir .build/published
+          (cd .build/published && sha256sum -c SHA256SUMS)
+          dbus-run-session -- ./scripts/validate-linux-release.sh .build/published/Markman-linux.tar.gz
