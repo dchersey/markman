@@ -21,7 +21,10 @@ jobs:
       - name: Install GTK and WebKitGTK
         run: sudo apt-get update && sudo apt-get install -y python3-gi gir1.2-gtk-4.0 gir1.2-webkit-6.0 xvfb xauth desktop-file-utils
       - name: Package and test Linux download
-        run: dbus-run-session -- ./scripts/package-linux.sh
+        # Allow WebKit's sandbox to create user namespaces on the CI VM.
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          dbus-run-session -- ./scripts/package-linux.sh
       - uses: actions/upload-artifact@v4
         with:
           name: linux-release
@@ -174,4 +177,5 @@ jobs:
           mkdir -p .build/published
           gh release download "$TAG" --dir .build/published
           (cd .build/published && sha256sum -c SHA256SUMS)
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           dbus-run-session -- ./scripts/validate-linux-release.sh .build/published/Markman-linux.tar.gz

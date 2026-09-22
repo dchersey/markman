@@ -17,7 +17,11 @@ jobs:
       - name: Install GTK and WebKitGTK
         run: sudo apt-get update && sudo apt-get install -y python3-gi gir1.2-gtk-4.0 gir1.2-webkit-6.0 xvfb xauth desktop-file-utils
       - name: Test Linux viewer
-        run: dbus-run-session -- bash scripts/test-linux.sh
+        # Ubuntu's runner policy otherwise prevents WebKit's bubblewrap sandbox.
+        # Permit user namespaces on this disposable VM; keep WebKit sandboxed.
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          dbus-run-session -- bash scripts/test-linux.sh
   test:
     runs-on: macos-26
     timeout-minutes: 15
