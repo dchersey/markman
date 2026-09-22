@@ -2,7 +2,30 @@
 
 A small macOS Markdown viewer. Open a file from your terminal in a native Swift/AppKit window, with the entire window available for reading. No editor, print-width column, or account.
 
-## Run
+## Install a release
+
+The release workflow produces an Apple Silicon build for macOS 13 or newer,
+signed with Developer ID and notarized by Apple. Download
+`Markman-macos-arm64.zip` from [Releases](https://github.com/dchersey/markman/releases)
+once a release has been published, unzip it, and move `Markman.app` to
+`/Applications` (or `~/Applications`).
+
+The archive also includes `bin/markman`. To install that launcher, run from the
+unzipped folder:
+
+```sh
+mkdir -p "$HOME/.local/bin"
+install -m 755 bin/markman "$HOME/.local/bin/markman"
+export PATH="$HOME/.local/bin:$PATH"
+markman /path/to/document.md
+```
+
+Add that PATH setting to your shell profile to keep it across terminal sessions.
+The launcher finds the app in Applications, or beside its `bin` folder before
+installation. Set `MARKMAN_APP=/path/to/Markman.app` to use another location.
+Intel Macs can build from source with the instructions below.
+
+## Build from source
 
 Requires macOS 13+ and the Swift 6 toolchain (Xcode or Command Line Tools).
 
@@ -84,3 +107,10 @@ its Apache-2.0 option. Both are compatible with GPLv3. See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the review, attribution,
 and distribution details, and [vendor/README.md](vendor/README.md) for matching
 upstream sources and rebuild instructions.
+
+## Signed GitHub releases
+
+See [docs/RELEASING.md](docs/RELEASING.md) for the signing secrets, release
+commands, and verification procedure. `.github/workflows/ci.yml` builds and
+tests changes to `main` and pull requests. `.github/workflows/release.yml`
+builds, signs, notarizes, and publishes stable `vMAJOR.MINOR.PATCH` tags.

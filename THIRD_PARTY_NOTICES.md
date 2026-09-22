@@ -59,5 +59,5 @@ both third-party licenses in the application resources. When distributing a
 compiled application, also provide the matching complete source and build
 scripts under GPLv3 section 6—for example, a source archive beside the binary
 for the exact same commit. An upstream link alone is not a replacement for
-providing corresponding source. This initial publication distributes source;
-no precompiled GitHub release is published.
+providing corresponding source. The GitHub release workflow publishes a matching source archive beside every
+compiled application archive.

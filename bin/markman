@@ -2,9 +2,21 @@
 # SPDX-License-Identifier: GPL-3.0-only
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP="$ROOT/.build/Markman.app"
+if [[ -n "${MARKMAN_APP:-}" ]]; then
+  APP="$MARKMAN_APP"
+elif [[ -f "$ROOT/Package.swift" && -x "$ROOT/scripts/build.sh" ]]; then
+  APP="$ROOT/.build/Markman.app"
+  if [[ ! -x "$APP/Contents/MacOS/markman" ]]; then "$ROOT/scripts/build.sh"; fi
+elif [[ -d "$ROOT/Markman.app" ]]; then
+  APP="$ROOT/Markman.app"
+elif [[ -d "$HOME/Applications/Markman.app" ]]; then
+  APP="$HOME/Applications/Markman.app"
+else
+  APP="/Applications/Markman.app"
+fi
 if [[ ! -x "$APP/Contents/MacOS/markman" ]]; then
-  "$ROOT/scripts/build.sh"
+  printf 'markman: install Markman.app in Applications or set MARKMAN_APP to its path.\n' >&2
+  exit 1
 fi
 args=()
 positional=false

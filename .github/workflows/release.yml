@@ -1,0 +1,135 @@
+name: Release
+
+# Publish a stable release by pushing vMAJOR.MINOR.PATCH.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Validate release version and credentials
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Expected vMAJOR.MINOR.PATCH'; exit 1; }
+          [[ "$(uname -m)" == arm64 ]] || { echo 'Expected an arm64 runner'; exit 1; }
+          for name in MACOS_CERT_P12 MACOS_SIGN_IDENTITY APPLE_ID APPLE_APP_PASSWORD APPLE_TEAM_ID; do
+            [[ -n "${!name}" ]] || { echo "Missing GitHub Actions secret: $name"; exit 1; }
+          done
+          [[ "$MACOS_SIGN_IDENTITY" == 'Developer ID Application:'* ]] || { echo 'Expected a Developer ID Application identity'; exit 1; }
+          printf 'MARKMAN_VERSION=%s\n' "${TAG#v}" >> "$GITHUB_ENV"
+
+      - name: Build and test release version
+        run: ./scripts/test.sh
+
+      - name: Import Developer ID certificate
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          keychain="$RUNNER_TEMP/markman-signing.keychain-db"
+          certificate="$RUNNER_TEMP/markman-signing.p12"
+          keychain_password="$(openssl rand -hex 32)"
+          echo "::add-mask::$keychain_password"
+          printf '%s' "$MACOS_CERT_P12" | base64 --decode > "$certificate"
+          trap 'rm -f "$certificate"' EXIT
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$certificate" -k "$keychain" -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
+          security list-keychains -d user -s "$keychain" "$HOME/Library/Keychains/login.keychain-db"
+
+      - name: Sign with Developer ID and hardened runtime
+        env:
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+        run: |
+          codesign --force --options runtime --timestamp \
+            --keychain "$RUNNER_TEMP/markman-signing.keychain-db" \
+            --sign "$MACOS_SIGN_IDENTITY" .build/Markman.app
+          codesign --verify --deep --strict --verbose=2 .build/Markman.app
+          .build/Markman.app/Contents/MacOS/markman --smoke-test examples/wide-table.md
+
+      - name: Notarize and staple
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          ditto -c -k --keepParent .build/Markman.app "$RUNNER_TEMP/Markman-notarize.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/Markman-notarize.zip" \
+            --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" --team-id "$APPLE_TEAM_ID" \
+            --wait --timeout 30m --output-format json > "$RUNNER_TEMP/notarization.json"
+          status="$(plutil -extract status raw -o - "$RUNNER_TEMP/notarization.json")"
+          if [[ "$status" != Accepted ]]; then
+            submission="$(plutil -extract id raw -o - "$RUNNER_TEMP/notarization.json")"
+            xcrun notarytool log "$submission" \
+              --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" --team-id "$APPLE_TEAM_ID"
+            echo "Notarization failed: $status"
+            exit 1
+          fi
+          xcrun stapler staple .build/Markman.app
+          xcrun stapler validate .build/Markman.app
+          spctl --assess --type execute --verbose=2 .build/Markman.app
+
+      - name: Package app, launcher, and corresponding source
+        run: |
+          mkdir -p .build/release-stage/bin .build/release-assets
+          ditto .build/Markman.app .build/release-stage/Markman.app
+          cp bin/markman .build/release-stage/bin/markman
+          cp LICENSE THIRD_PARTY_NOTICES.md .build/release-stage/
+          ditto -c -k .build/release-stage .build/release-assets/Markman-macos-arm64.zip
+          git archive --format=tar.gz --prefix="markman-${TAG#v}/" \
+            -o ".build/release-assets/markman-${TAG#v}-source.tar.gz" HEAD
+          cd .build/release-assets
+          shasum -a 256 Markman-macos-arm64.zip "markman-${TAG#v}-source.tar.gz" > SHA256SUMS
+
+      - name: Validate packaged release before publishing
+        run: ./scripts/validate-release.sh --local .build/release-assets "$TAG"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG" .build/release-assets/* \
+            --verify-tag --title "Markman $TAG" --generate-notes
+
+      - name: Remove signing material
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/markman-signing.keychain-db" || true
+          rm -f "$RUNNER_TEMP/markman-signing.p12" "$RUNNER_TEMP/Markman-notarize.zip"
+
+  validate:
+    needs: release
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download and verify published assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: ./scripts/validate-release.sh "$TAG"
