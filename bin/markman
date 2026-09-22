@@ -1,0 +1,29 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+APP="$ROOT/.build/Markman.app"
+if [[ ! -x "$APP/Contents/MacOS/markman" ]]; then
+  "$ROOT/scripts/build.sh"
+fi
+args=()
+positional=false
+while (($#)); do
+  arg="$1"; shift
+  if [[ "$positional" == false ]]; then
+    case "$arg" in
+      --) positional=true; args+=(--); continue ;;
+      --help|-h) exec "$APP/Contents/MacOS/markman" --help ;;
+      --theme|--css)
+        if (($# == 0)); then printf 'markman: missing value for %s\n' "$arg" >&2; exit 1; fi
+        value="$1"; shift
+        if [[ "$arg" == --css && "$value" != /* ]]; then value="$PWD/$value"; fi
+        args+=("$arg" "$value"); continue ;;
+      -*) printf 'markman: unknown option: %s\n' "$arg" >&2; exit 1 ;;
+    esac
+  fi
+  if [[ "$arg" != /* ]]; then arg="$PWD/$arg"; fi
+  args+=("$arg")
+done
+"$APP/Contents/MacOS/markman" --validate-only "${args[@]}"
+exec /usr/bin/open -n "$APP" --args "${args[@]}"

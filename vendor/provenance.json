@@ -1,0 +1,25 @@
+{
+  "retrieved": "2026-09-22",
+  "artifacts": [
+    {
+      "artifact": "Sources/Markman/Resources/marked.js",
+      "url": "https://cdn.jsdelivr.net/npm/marked@18.0.13/lib/marked.umd.js",
+      "sha256": "b147274a9ce27d17276587167e49483d719f6893eeca3a3667a59797661d3556"
+    },
+    {
+      "artifact": "Sources/Markman/Resources/purify.js",
+      "url": "https://cdn.jsdelivr.net/npm/dompurify@3.2.7/dist/purify.min.js",
+      "sha256": "40cff492b54353a55cdf9ffb369786539ffb7d54d25f97dd4a1e8975b309c35d"
+    },
+    {
+      "artifact": "markman-marked-source.tar.gz",
+      "url": "https://codeload.github.com/markedjs/marked/tar.gz/refs/tags/v18.0.13",
+      "sha256": "6a59a56f83d9e7029533e65554c311b655d6b79c181b93c56df303320d5d5ebb"
+    },
+    {
+      "artifact": "markman-dompurify-source.tar.gz",
+      "url": "https://codeload.github.com/cure53/DOMPurify/tar.gz/refs/tags/3.2.7",
+      "sha256": "35040992faad54d938ab1e74cb0916b7c232c25d7dc7a8b820c7794e12f425a9"
+    }
+  ]
+}

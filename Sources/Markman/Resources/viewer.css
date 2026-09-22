@@ -1,0 +1,25 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+:root { color-scheme: light; --bg:#ffffff; --fg:#24292f; --muted:#57606a; --line:#d8dee4; --stripe:#f6f8fa; --code:#eff1f3; --link:#0969da; }
+:root[data-theme="dark"] { color-scheme:dark; --bg:#161b22; --fg:#dce3eb; --muted:#a1adba; --line:#36404b; --stripe:#1e252e; --code:#272f39; --link:#79b8ff; }
+@media(prefers-color-scheme:dark) { :root[data-theme="system"] { color-scheme:dark; --bg:#161b22; --fg:#dce3eb; --muted:#a1adba; --line:#36404b; --stripe:#1e252e; --code:#272f39; --link:#79b8ff; } }
+* { box-sizing:border-box; }
+html { background:var(--bg); color:var(--fg); }
+body { margin:0; padding:28px 36px 64px; font:16px/1.65 -apple-system,BlinkMacSystemFont,sans-serif; overflow-wrap:anywhere; }
+main { width:100%; max-width:none; }
+h1,h2,h3,h4,h5,h6 { line-height:1.25; margin:1.5em 0 .65em; font-weight:650; }
+h1 { font-size:2em; } h2 { font-size:1.5em; border-bottom:1px solid var(--line); padding-bottom:.35em; } h3 { font-size:1.2em; }
+main > :first-child { margin-top:0; }
+p,ul,ol,blockquote,pre,table { margin:0 0 1.1em; }
+a { color:var(--link); text-decoration:none; } a:hover { text-decoration:underline; }
+code,kbd { font: .88em/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--code); border-radius:4px; padding:.12em .3em; white-space:break-spaces; overflow-wrap:anywhere; }
+pre { background:var(--stripe); border:1px solid var(--line); border-radius:6px; padding:16px; overflow:auto; }
+pre code { background:transparent; padding:0; white-space:pre; overflow-wrap:normal; }
+.table-scroll { width:100%; overflow-x:auto; margin-bottom:1.1em; }
+table { border-collapse:collapse; width:100%; margin:0; table-layout:auto; }
+th,td { border:1px solid var(--line); padding:10px 13px; text-align:left; vertical-align:top; min-width:100px; overflow-wrap:anywhere; }
+th { background:var(--stripe); font-weight:600; }
+tbody tr:nth-child(even) { background:var(--stripe); }
+blockquote { color:var(--muted); border-left:3px solid var(--line); padding:0 1em; }
+img { max-width:100%; height:auto; } hr { border:0; border-top:1px solid var(--line); margin:1.6em 0; }
+input[type=checkbox] { margin-right:.5em; } li > p { margin-bottom:.4em; }
+@media(max-width:600px) { body { padding:20px 18px 40px; } th,td { padding:8px; } }
