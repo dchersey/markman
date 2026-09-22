@@ -6,9 +6,11 @@ cd "$ROOT"
 ./scripts/build.sh
 BIN="$ROOT/.build/Markman.app/Contents/MacOS/markman"
 PLIST="$ROOT/.build/Markman.app/Contents/Info.plist"
-[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")" == "${MARKMAN_VERSION:-0.1.0}" ]]
-[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")" == "${MARKMAN_VERSION:-0.1.0}" ]]
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")" == "${MARKMAN_VERSION:-0.1.1}" ]]
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")" == "${MARKMAN_VERSION:-0.1.1}" ]]
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$PLIST")" == org.hersey.markman ]]
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$PLIST")" == Markman.icns ]]
+[[ -s "$ROOT/.build/Markman.app/Contents/Resources/Markman.icns" ]]
 if MARKMAN_VERSION=invalid ./scripts/build.sh 2>/dev/null; then exit 1; fi
 cmp LICENSE .build/Markman.app/Contents/Resources/LICENSE
 cmp THIRD_PARTY_NOTICES.md .build/Markman.app/Contents/Resources/THIRD_PARTY_NOTICES.md

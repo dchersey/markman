@@ -1,5 +1,7 @@
 # Markman
 
+<img src="assets/Markman.png" width="128" alt="Markman: an ivory M wearing a blue baseball cap, beside a blue down arrow">
+
 A small macOS Markdown viewer. Open a file from your terminal in a native Swift/AppKit window, with the entire window available for reading. No editor, print-width column, or account.
 
 ## Install a release
