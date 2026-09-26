@@ -5,6 +5,8 @@ import argparse
 import json
 import mimetypes
 from pathlib import Path
+import shutil
+import subprocess
 import sys
 from urllib.parse import unquote, urlsplit
 
@@ -59,7 +61,7 @@ def application(args):
             open_button.connect("clicked", lambda *_: app.pick_files(self))
             header.pack_start(open_button)
             menu = Gio.Menu()
-            for title, action in (("Reload", "win.reload"), ("Zoom in", "win.zoom-in"),
+            for title, action in (("Copy path", "win.copy-path"), ("Reload", "win.reload"), ("Zoom in", "win.zoom-in"),
                                   ("Zoom out", "win.zoom-out"), ("Reset zoom", "win.zoom-reset")):
                 menu.append(title, action)
             themes = Gio.Menu()
@@ -82,7 +84,14 @@ def application(args):
             self.web.connect("permission-request", lambda _, request: (request.deny(), True)[1])
             self.web.connect("web-process-terminated", lambda *_: self.error("The web process stopped. Reopen this document."))
             self.set_child(self.web)
+            # Mac keyboards have no Page keys; Option+arrow pages there, so
+            # Alt+Up/Down page here. Plain arrows and Page keys are WebKit's own.
+            keys = Gtk.EventControllerKey(propagation_phase=Gtk.PropagationPhase.CAPTURE)
+            keys.connect("key-pressed", self.page_key)
+            self.add_controller(keys)
+            self.web.grab_focus()
             for name, callback in {
+                "copy-path": lambda *_: self.copy_path(),
                 "reload": lambda *_: self.reload(force=True),
                 "close": lambda *_: self.close(),
                 "zoom-in": lambda *_: self.zoom(1.1),
@@ -154,6 +163,28 @@ def application(args):
                     self.error(error)
             return GLib.SOURCE_CONTINUE
 
+        def copy_path(self):
+            # An executable named markman-copy-path on PATH may rewrite the
+            # path first (e.g. relative to a project); otherwise copy it as is.
+            text = str(self.path)
+            helper = shutil.which("markman-copy-path")
+            if helper:
+                try:
+                    result = subprocess.run([helper, text], capture_output=True, text=True, timeout=2)
+                    if result.returncode == 0 and result.stdout.strip():
+                        text = result.stdout.strip()
+                except (OSError, subprocess.SubprocessError):
+                    pass
+            self.get_clipboard().set(text)
+
+        def page_key(self, _, keyval, _keycode, state):
+            mods = state & Gtk.accelerator_get_default_mod_mask()
+            if mods != Gdk.ModifierType.ALT_MASK or keyval not in (Gdk.KEY_Up, Gdk.KEY_Down):
+                return False
+            sign = "-" if keyval == Gdk.KEY_Up else ""
+            self.evaluate(f"window.scrollBy(0, {sign}window.innerHeight * 0.9)")
+            return True
+
         def zoom(self, factor):
             self.web.set_zoom_level(max(0.5, min(3, self.web.get_zoom_level() * factor)))
 
@@ -207,7 +238,9 @@ def application(args):
             action = Gio.SimpleAction.new_stateful("theme", GLib.VariantType.new("s"), GLib.Variant("s", self.theme))
             action.connect("activate", self.change_theme)
             self.add_action(action)
+            # Alt+Shift+L matches Omarchy's Copy URL shortcut in Chromium.
             for name, keys in {"app.open": ["<Control>o"], "win.reload": ["<Control>r"],
+                "win.copy-path": ["<Alt><Shift>l", "<Control><Shift>c"],
                 "win.close": ["<Control>w"], "win.zoom-in": ["<Control>equal", "<Control>plus"],
                 "win.zoom-out": ["<Control>minus"], "win.zoom-reset": ["<Control>0"]}.items():
                 self.set_accels_for_action(name, keys)
