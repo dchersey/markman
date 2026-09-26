@@ -39,7 +39,12 @@ including atomic replacement and deletion/recreation, preserving scroll, zoom
 and appearance. Missing or temporarily unreadable files keep their last preview.
 
 Use **Ctrl+O** to open, **Ctrl+R** to reload, **Ctrl+W** to close,
-**Ctrl++ / Ctrl+-** to zoom and **Ctrl+0** to reset. The window menu offers
+**Ctrl++ / Ctrl+-** to zoom and **Ctrl+0** to reset. Arrow keys, Page Up/Down,
+Space, Home and End scroll; **Alt+Up / Alt+Down** page, like Option+arrow on a
+Mac. **Alt+Shift+L** or **Ctrl+Shift+C** copies the document's path. If an
+executable named `markman-copy-path` is on `PATH`, Markman passes it the
+absolute path and copies what it prints instead, so the path can be rewritten,
+for example relative to a project. The window menu offers Copy path and
 System / Light / Dark appearance. System follows the appearance WebKit receives
 from the desktop; it does not import an Omarchy theme's custom palette.
 
